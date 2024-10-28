@@ -73,9 +73,14 @@ BF16 MAC without pipelining:
 
 As you can see in the ***test_mac.py*** code for int8, we have achieved ***91.49%*** coverage with a fixed seed and 1,00,00,000 test cases randomly chosen in the range. The .yml can be seen in ***int8_coverage_mac.yml***.
 
+
 Since the range of BF16 was too big, we were unable to sucessfully implementing by taking the range, so we took a pattern of walking ones and zeros and implemented it.
 
 
+## Running the Files
+To run the files, use src_BSV as mentioned in the examples.
+
+To use the testing files, please refer the ***folder counter*** and run as given in the example, ensure to put the testcases folder in mac_verif.
 
 
 
