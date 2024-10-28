@@ -49,9 +49,33 @@ BF16 Testcases Passing
 
 ## Pipelining
 
-We piplined our designs by pipelining our stages in multiplier as well as adder. Everywhere we have an 16 bit CLA, we add specialFIFOS at the input and output, effectively pipelining all our designs!
+We piplined our designs by pipelining our stages in multiplier as well as adder. Everywhere we have an 16 bit CLA, we add specialFIFOS at the input and output, effectively pipelining all our designs! Since the 16 bit CLA is used througout the design, we felt this decision would yield the most benefit!
 
-Since the 16 bit CLA 
+All the pipelined designs are pre-fixed with ***pl_***.
+
+Int 8 MAC Pipelined:
+
+![plmacint](https://github.com/user-attachments/assets/a43e11f4-4aa4-474a-ae05-98bca35cbb53)
+
+Int 8 MAC without pipelining:
+
+![macint](https://github.com/user-attachments/assets/465dd1e4-3146-4d18-a400-16f07fbc710f)
+
+BF16 MAC Pipelined:
+
+![plmacbf16](https://github.com/user-attachments/assets/9714598b-6960-4e85-a930-0c16d7cb8122)
+
+BF16 MAC without pipelining:
+
+![macbf16](https://github.com/user-attachments/assets/d5af0b1f-9c89-47de-b659-ed66db085093)
+
+## Coverage
+
+As you can see in the ***test_mac.py*** code for int8, we have achieved ***91.49%*** coverage with a fixed seed and 1,00,00,000 test cases randomly chosen in the range. The .yml can be seen in ***int8_coverage_mac.yml***.
+
+Since the range of BF16 was too big, we were unable to sucessfully implementing by taking the range, so we took a pattern of walking ones and zeros and implemented it.
+
+
 
 
 
