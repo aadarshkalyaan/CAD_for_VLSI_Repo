@@ -1,0 +1,14 @@
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+
+PWD=$(shell pwd)
+
+export PYTHONPATH:=$(PWD)/mac_verif:$(PYTHONPATH)
+
+VERILOG_SOURCES = $(wildcard verilog/*.v)
+
+##EXTRA_ARGS = --trace --trace-structs
+TOPLEVEL = mkMAC
+MODULE   := test_mac1
+
+include $(shell cocotb-config --makefiles)/Makefile.sim
