@@ -1,8 +1,9 @@
 package pl_mac_int;
 import FIFO::*;
 import SpecialFIFOs::*;
-import cla16::*;
-interface Pl_mac_int_ifc;
+import cla_int16::*;
+import cla_int8_without_start::*;
+interface MAC_INT_ifc;
     method Action start(Bit#(8) a, Bit#(8) b, Bit#(32) c);
     method ActionValue#(Bit#(33)) get_result(); //including overflow
 endinterface
@@ -13,7 +14,7 @@ typedef struct {
 } StepFormat
 deriving(Bits, Eq);
 (* synthesize *)
-module mkPl_mac_int(Pl_mac_int_ifc);
+module mkMAC_INT(MAC_INT_ifc);
  // Declare FIFO for the adder pipeline stages
  FIFO#(StepFormat) ififo <- mkPipelineFIFO();
  FIFO#(StepFormat) pfifo_1 <- mkPipelineFIFO();
@@ -29,16 +30,16 @@ module mkPl_mac_int(Pl_mac_int_ifc);
  FIFO#(Bit#(33)) add_pfifo_1 <- mkPipelineFIFO();
  FIFO#(Bit#(33)) add_ofifo <- mkPipelineFIFO();
 
- Cla16_ifc cla16_0 <- mkCla16; 
- Cla16_ifc cla16_1 <- mkCla16; 
- Cla16_ifc cla16_2 <- mkCla16; 
- Cla16_ifc cla16_3 <- mkCla16; 
- Cla16_ifc cla16_4 <- mkCla16; 
- Cla16_ifc cla16_5 <- mkCla16; 
- Cla16_ifc cla16_6 <- mkCla16; 
- Cla16_ifc cla16_7 <- mkCla16; 
- Cla16_ifc cla16_8 <- mkCla16; 
- Cla16_ifc cla16_9 <- mkCla16; 
+ Cla16_ifc cla16_0 <- mkCla16Adder; 
+ Cla16_ifc cla16_1 <- mkCla16Adder; 
+ Cla16_ifc cla16_2 <- mkCla16Adder; 
+ Cla16_ifc cla16_3 <- mkCla16Adder; 
+ Cla16_ifc cla16_4 <- mkCla16Adder; 
+ Cla16_ifc cla16_5 <- mkCla16Adder; 
+ Cla16_ifc cla16_6 <- mkCla16Adder; 
+ Cla16_ifc cla16_7 <- mkCla16Adder; 
+ Cla16_ifc cla16_8 <- mkCla16Adder; 
+ Cla16_ifc cla16_9 <- mkCla16Adder; 
  // Rule for adder pipeline stage-1
  rule rl_pipe_stage1;
    StepFormat inp_stage1 = ififo.first();
@@ -146,7 +147,7 @@ module mkPl_mac_int(Pl_mac_int_ifc);
 
    pfifo_5.deq();
    pfifo_6.enq(out_stage1);
- endrule : rl_pipe_stage6
+ endrule : rl_pipe_stage2
 
  rule rl_pipe_stage7;
    StepFormat inp_stage1 = pfifo_6.first();
@@ -189,7 +190,7 @@ module mkPl_mac_int(Pl_mac_int_ifc);
     Bit#(32) a = add_ififo.first();
     Bit#(16) r = inp_stage1.res;
     Bit#(17) p = cla16_8.compute(r,a[15:0],1'b0);
-    add_ififo.deq();
+    add_ififo.deq()
     ofifo.deq();
     add_pfifo_1.enq({a[31:16],p}); //33 bits
   endrule : rl_pipe_stage9
@@ -197,8 +198,8 @@ module mkPl_mac_int(Pl_mac_int_ifc);
 rule rl_pipe_stage10;
     Bit#(33) a = add_pfifo_1.first();
     Bit#(17) fres = signExtend(a[32:17]);
-    if (a[16]==1)  fres = cla16_9.compute(a[32:17],16'b0,1'b1);
-    add_pfifo_1.deq();
+    if (a[16]==1)  fres = cla16_9.compute(a[32:17],8'b0,1'b1);
+    add_pfifo_1.deq()
     add_ofifo.enq({fres,a[15:0]});
   endrule : rl_pipe_stage10
 
@@ -210,7 +211,7 @@ rule rl_pipe_stage10;
     inp.val2 = {8'b0,b};
     inp.res  = 16'b0;
     ififo.enq(inp);
-    add_ififo.enq(c);
+    add_ififo.enq(c)
 endmethod : start
 
 method ActionValue#(Bit#(33)) get_result();
@@ -221,5 +222,5 @@ endmethod
 
     
 endmodule
-
+endmodule
 endpackage

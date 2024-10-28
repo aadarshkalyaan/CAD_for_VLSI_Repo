@@ -1,18 +1,18 @@
-package pl_mac_bf16;
-import fpadd_mod::*;
-import bf_mul_mod::*;
+package mac_bf16;
+import fp32Add::*;
+import bf16_mul::*;
 import FIFO::*;
 import SpecialFIFOs::*;
 //typedef enum {Idle,Multiplying,WaitMulResult,Adding,Done} State deriving (Bits, Eq);
     
-interface Pl_mac_bf16_ifc;
+interface MAC_BF16_ifc;
     method Action start(Bit#(16) a, Bit#(16) b, Bit#(32) c);
-    method ActionValue#(Bit#(32)) get_result();
+    method Bit#(32) get_result() ;
 endinterface
 (* synthesize *)
-module mkPl_mac_bf16(Pl_mac_bf16_ifc);
-    Bf_mul_ifc mul <- mkBf_mul;
-    Fp_add_ifc add <- mkFp_add;
+module mkMAC_BF16(MAC_BF16_ifc);
+    Mul_BF16_ifc mul <- mkbf16_mul;
+    FP32_Add_ifc add <- mkFP32Add;
     FIFO#(Bit#(32)) m_ififo <- mkPipelineFIFO();
     FIFO#(Bit#(32)) a_ififo <- mkPipelineFIFO();
     FIFO#(Bit#(32)) ofifo <- mkPipelineFIFO();
@@ -33,10 +33,10 @@ module mkPl_mac_bf16(Pl_mac_bf16_ifc);
         ofifo.enq(x);
     endrule
     method Action start(Bit#(16) a, Bit#(16) b, Bit#(32) c);
-        m_ififo.enq({a,b});
-        a_ififo.enq(c);
+        m_ififo.enq({a,b})
+        a_ififo.enq(c)
     endmethod
-    method ActionValue#(Bit#(32)) get_result();
+    method Bit#(32) get_result() if (state == Done);
         Bit#(32) out = ofifo.first();
         ofifo.deq();
         return out;

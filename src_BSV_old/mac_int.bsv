@@ -1,13 +1,13 @@
 package mac_int;
-import cla_int32::*;
-import int8_signed_multiplier_2 ::*;
-interface MAC_INT_ifc;
+import cla32::*;
+import mul8 ::*;
+interface Mac_int_ifc;
     method Bit#(32) compute(Bit#(8) a, Bit#(8) b, Bit#(32) c);
 endinterface
 (* synthesize *)
-module mkMAC_INT(MAC_INT_ifc);
-    Multi_ifc mul <- mkMultiplier;
-    Cla32_ifc add <- mkCla32Adder;
+module mkMac_int(Mac_int_ifc);
+    Mul8_ifc mul <- mkMul8;
+    Cla32_ifc add <- mkCla32;
     function mac(Bit#(8) a, Bit#(8) b, Bit#(32) c);
         Bit#(16) z = mul.compute(a,b);
         Bit#(33) z1 = add.compute(signExtend(z),c,1'b0);

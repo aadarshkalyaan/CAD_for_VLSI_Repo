@@ -1,16 +1,16 @@
 package mac_bf16;
-import fp_add::*;
-import bf_mul::*;
+import fp32Add::*;
+import bf16_mul::*;
 typedef enum {Idle,Multiplying,WaitMulResult,Adding,Done} State deriving (Bits, Eq);
     
-interface Mac_bf16_ifc;
+interface MAC_BF16_ifc;
     method Action start(Bit#(16) a, Bit#(16) b, Bit#(32) c);
     method Bit#(32) get_result() ;
 endinterface
 (* synthesize *)
-module mkMac_bf16(Mac_bf16_ifc);
-    Bf_mul_ifc mul <- mkBf_mul;
-    Fp_add_ifc add <- mkFp_add;
+module mkMAC_BF16(MAC_BF16_ifc);
+    Mul_BF16_ifc mul <- mkbf16_mul;
+    FP32_Add_ifc add <- mkFP32Add;
     
     Reg#(State) state <- mkReg(Idle);
     Reg#(Bit#(16)) reg_a <- mkReg(0);
