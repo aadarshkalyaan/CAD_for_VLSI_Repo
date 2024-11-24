@@ -103,5 +103,8 @@ Since all C inputs are 0 initially, we can follow the same method as before and 
 Again as before, we will input these values at once to all the modules.
 
 ### A Inputs:
-This is a bit tricky as the 
+This is a bit tricky as the the columns must be fed into the rows of the matrxi but with each row having a 0 appended at the beginning. This can be seen in the example shown in the pdf. Hence we define a **a_fifos** to stores the matrix values and the zeros respectively.
+
+### Computation:
+Now at every clock cycle we can pass through the **MAC_result** down to the next module and the A inputs across. And we can use the **a_fifos** to input the next a inputs at the leftmost modules. The MAC results from the bottom most modules are stored in **result_fifos**. We can then access the final value by deququeing the **result_fifos** 4 times each.
 
