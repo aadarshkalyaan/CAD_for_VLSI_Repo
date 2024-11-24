@@ -2,7 +2,7 @@
 ## Done by Aadarsh Kalyaan EE21B001 and Sumeeth C Muchandimath EE21B145
 This repository will be used for the projects of the course CS6230 (CAD for VLSI)
 
-## Assignment 1 :
+# Assignment 1 :
 ## Problem Statement:
 To design and verify the simple MAC Operation for two cases : **A(int8) B(int8) C(int32) and A(bf16) B(bf16) C(fp32)**
 
@@ -83,4 +83,25 @@ To run the files, use src_BSV as mentioned in the examples.
 To use the testing files, please refer the ***folder counter*** and run as given in the example, ensure to put the testcases folder in mac_verif.
 
 
+# Assignment 2:
+## Problem Statement:
+To design and verify a 4x4 systolic array for matrix multiplication for int8 or bf16 formats.
+
+
+## Design Approach:
+We first begin creating a **MAC_Wrapper** module which has a FIFO at the A,B,C and S inputs so that the inputs persist and can be passed through to other instances. This can be seen in ***MAC_Wrapper.bsv***.
+
+Afer creating the wrapper, we can about instantiating 16 of the modules in our ***SystolicArray.bsv***.
+
+### B Inputs:
+As we can see the B inputs are fed column wise into the array and do not shift throughout the entire operation. Hence we can directly input the **B Values** into the array via the **enqB** method defined for the wrapper.
+
+### C Inputs:
+Since all C inputs are 0 initially, we can follow the same method as before and input these values into the array.
+
+### S Inputs:
+Again as before, we will input these values at once to all the modules.
+
+### A Inputs:
+This is a bit tricky as the 
 
