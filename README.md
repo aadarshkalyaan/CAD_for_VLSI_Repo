@@ -108,3 +108,17 @@ This is a bit tricky as the the columns must be fed into the rows of the matrxi 
 ### Computation:
 Now at every clock cycle we can pass through the **MAC_result** down to the next module and the A inputs across. And we can use the **a_fifos** to input the next a inputs at the leftmost modules. The MAC results from the bottom most modules are stored in **result_fifos**. We can then access the final value by deququeing the **result_fifos** 4 times each.
 
+Assignment 1:
+
+1. int32 :
+a. pipelined design: code - completed, verification - completed
+b. unpipeined design : code - completed, verification - completed
+
+2. bfloat16:
+a. pipelined design: code - completed, verification - completed
+b. unpipeined design : code - completed, verification - completed
+
+Assignment 2:
+
+int32: code - in progress, verification - not-completed
+bfloat16: code - in progress, verification - not-completed
