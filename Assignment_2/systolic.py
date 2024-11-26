@@ -1,83 +1,3 @@
-import cocotb
-from cocotb_coverage.coverage import coverage_section, CoverPoint, CoverCross
-import random
-import tensorflow as tf
-import numpy as np
-
-# Set random seed for reproducibility
-random.seed(2)
-
-# Generate 1000 unique random cases for a, b, c, and s
-sample_cases = set()
-while len(sample_cases) < 100000:
-    a = random.randint(-128, 127)  # 8-bit range for S1 mode
-    b = random.randint(-128, 127)
-    c = random.randint(-2147483648, 2147483647)  # 32-bit range for c
-    s = random.choice([0])  # Mode selection
-    sample_cases.add((a, b, c, s))
-
-# Separate the cases for a, b, c, and s bins
-a_cases = {case[0] for case in sample_cases}
-b_cases = {case[1] for case in sample_cases}
-c_cases = {case[2] for case in sample_cases}
-s_cases = {case[3] for case in sample_cases}
-
-# Define coverage points based on generated samples
-mac_coverage = coverage_section(
-    CoverPoint('mac_operation.s', vname='s', bins=list(s_cases)),
-    CoverPoint('mac_operation.a', vname='a', bins=list(a_cases)),
-    CoverPoint('mac_operation.b', vname='b', bins=list(b_cases)),
-    CoverPoint('mac_operation.c', vname='c', bins=list(c_cases)),
-    CoverCross('mac_operation.inputs_cross', items=['mac_operation.a', 'mac_operation.b', 'mac_operation.s'])
-)
-
-@mac_coverage
-def model_mac1(a: tf.bfloat16, b: tf.bfloat16, c: tf.float32, s: int) -> int:
-    """
-    MAC operation model for S1 (int32) and S2 (fp32) modes with coverage.
-    In S1 mode (s=0): compute int32 MAC with a[7:0] and b[7:0].
-    In S2 mode (s=1): return a placeholder for fp32 MAC result.
-    """
-    if s == 1:
-        return bf16_fp32_operations(a,b,c)
-    else:
-        # S1 mode uses int32 computation with lower 8 bits of a and b
-        return signed_8bit_mult_add(a,b,c)
-
-sample_cases1 = set()
-while len(sample_cases1) < 1000:
-    a = tf.random.uniform([], minval=-3.4e38, maxval=3.4e38, dtype=tf.bfloat16)
-    b = tf.random.uniform([], minval=-1.0, maxval=1.0, dtype=tf.bfloat16)
-    c = tf.random.uniform([], minval=-1.0, maxval=1.0, dtype=tf.float32)
-    sample_cases1.add((a, b, c, s))
-
-# Separate the cases for a, b, c, and s bins
-a_cases = {case[0] for case in sample_cases}
-b_cases = {case[1] for case in sample_cases}
-c_cases = {case[2] for case in sample_cases}
-s_cases = {case[3] for case in sample_cases}
-
-# Define coverage points based on generated samples
-mac_coverage = coverage_section(
-    CoverPoint('mac_operation.s', vname='s', bins=list(s_cases)),
-    CoverPoint('mac_operation.a', vname='a', bins=list(a_cases)),
-    CoverPoint('mac_operation.b', vname='b', bins=list(b_cases)),
-    CoverPoint('mac_operation.c', vname='c', bins=list(c_cases)),
-    CoverCross('mac_operation.inputs_cross', items=['mac_operation.a', 'mac_operation.b', 'mac_operation.s'])
-)
-@mac_coverage
-def model_mac(a: int, b: int, c: int, s: int) -> int:
-    """
-    MAC operation model for S1 (int32) and S2 (fp32) modes with coverage.
-    In S1 mode (s=0): compute int32 MAC with a[7:0] and b[7:0].
-    In S2 mode (s=1): return a placeholder for fp32 MAC result.
-    """
-    if s == 1:
-        # Placeholder for fp32 MAC result (since exact fp32 modeling isn’t specified here)
-        return bf16_fp32_operations(a,b,c)
-    else:
-        # S1 mode uses int32 computation with lower 8 bits of a and b
-        return signed_8bit_mult_add(a,b,c)
 def bf16_fp32_operations(a_str, b_str, c_str):
    
     mul_result = bf16_mul(a_str, b_str)
@@ -240,11 +160,7 @@ def fp32_add(a, b):
     
     return result_sign+ int_to_binary_string(final_exp,8)+norm_mant[1:]
 
-
-
-
-    
-def signed_8bit_mult_add(a: int, b: int, c: int) -> int:
+def signed_8bit_mult_add(a,b,c):
     """
     Multiplies the least significant 8 bits of two signed 16-bit integers `a` and `b`,
     adds the result to a signed 32-bit integer `c`, and returns the 32-bit signed result.
@@ -272,19 +188,35 @@ def signed_8bit_mult_add(a: int, b: int, c: int) -> int:
         result += 0x100000000
 
     return result
-
-# # model for increment alone
-
-# import cocotb
-# from cocotb_coverage.coverage import *
-
-# mac_coverage = coverage_section(
-#     CoverPoint('top.increment_di', vname='increment_di', bins = list(range(0,16))),
-#     CoverPoint('top.EN_increment', vname='EN_increment', bins = list(range(0,2))),
-#     CoverCross('top.cross_cover', items = ['top.increment_di', 'top.EN_increment'])
-# )
-# @mac_coverage
-# def model_mac(current_state, EN_increment: int, increment_di: int) -> int:
-#     if(EN_increment):
-#         return current_state + 2 * increment_di
-#     return 0e3
+def mac(s,a,b,c):
+    if s == 1:
+        return bf16_fp32_operations(a,b,c)
+    else:
+        # S1 mode uses int32 computation with lower 8 bits of a and b
+        return signed_8bit_mult_add(a,b,c)
+def systolic(s,m,n):
+    #m and n are 4x4 matrices
+    r=[[0 for j in range(4)]for i in range(4)]
+    r[0][0]=mac(s,m[0][3],n[3][0],mac(s,m[0][2],n[2][0],mac(s,m[0][1],n[1][0],mac(s,m[0][0],n[0][0],0))))
+    r[0][1]=mac(s,m[0][3],n[3][1],mac(s,m[0][2],n[2][1],mac(s,m[0][1],n[1][1],mac(s,m[0][0],n[0][1],0))))
+    r[0][2]=mac(s,m[0][3],n[3][2],mac(s,m[0][2],n[2][2],mac(s,m[0][1],n[1][2],mac(s,m[0][0],n[0][2],0))))
+    r[0][3]=mac(s,m[0][3],n[3][3],mac(s,m[0][2],n[2][3],mac(s,m[0][1],n[1][3],mac(s,m[0][0],n[0][3],0))))
+    r[1][0]=mac(s,m[1][3],n[3][0],mac(s,m[1][2],n[2][0],mac(s,m[1][1],n[1][0],mac(s,m[1][0],n[0][0],0))))
+    r[1][1]=mac(s,m[1][3],n[3][1],mac(s,m[1][2],n[2][1],mac(s,m[1][1],n[1][1],mac(s,m[1][0],n[0][1],0))))
+    r[1][2]=mac(s,m[1][3],n[3][2],mac(s,m[1][2],n[2][2],mac(s,m[1][1],n[1][2],mac(s,m[1][0],n[0][2],0))))
+    r[1][3]=mac(s,m[1][3],n[3][3],mac(s,m[1][2],n[2][3],mac(s,m[1][1],n[1][3],mac(s,m[1][0],n[0][3],0))))
+    r[2][0]=mac(s,m[2][3],n[3][0],mac(s,m[2][2],n[2][0],mac(s,m[2][1],n[1][0],mac(s,m[2][0],n[0][0],0))))
+    r[2][1]=mac(s,m[2][3],n[3][1],mac(s,m[2][2],n[2][1],mac(s,m[2][1],n[1][1],mac(s,m[2][0],n[0][1],0))))
+    r[2][2]=mac(s,m[2][3],n[3][2],mac(s,m[2][2],n[2][2],mac(s,m[2][1],n[1][2],mac(s,m[2][0],n[0][2],0))))
+    r[2][3]=mac(s,m[2][3],n[3][3],mac(s,m[2][2],n[2][3],mac(s,m[2][1],n[1][3],mac(s,m[2][0],n[0][3],0))))
+    r[3][0]=mac(s,m[3][3],n[3][0],mac(s,m[3][2],n[2][0],mac(s,m[3][1],n[1][0],mac(s,m[3][0],n[0][0],0))))
+    r[3][1]=mac(s,m[3][3],n[3][1],mac(s,m[3][2],n[2][1],mac(s,m[3][1],n[1][1],mac(s,m[3][0],n[0][1],0))))
+    r[3][2]=mac(s,m[3][3],n[3][2],mac(s,m[3][2],n[2][2],mac(s,m[3][1],n[1][2],mac(s,m[3][0],n[0][2],0))))
+    r[3][3]=mac(s,m[3][3],n[3][3],mac(s,m[3][2],n[2][3],mac(s,m[3][1],n[1][3],mac(s,m[3][0],n[0][3],0))))
+    return r
+m = [[2,7,-9,0],[0,4,13,0],[-16,7,8,0],[0,0,0,0]]
+n = [[7,13,1,0],[-1,0,6,0],[4,-11,7,0],[0,0,0,0]]
+r=systolic(0,m,n)
+for i in r:
+    print(i)
+    
